@@ -81,8 +81,8 @@ function Install-MinGW64 {
     Write-Log "Fetching lastest MinGW64 download link at https://winlibs.com/..." -Level Info
     $WinlibsResponse = Invoke-WebRequest -Uri "https://winlibs.com/" -UseBasicParsing
     $MinGW64DownloadLink = ($WinlibsResponse.Links | Where-Object {
-            $_.href -like "*winlibs-x86_64-posix-seh-gcc-*-mingw-w64ucrt-*.zip"
-        } | Select-Object -First 1).href
+        $_.href -like "*winlibs-x86_64-posix-seh-gcc-*-mingw-w64ucrt-*.zip"
+    } | Select-Object -First 1).href
 
     if (-not $MinGW64DownloadLink) {
         throw "Could not find a valid MinGW64 download link on WinLibs."
@@ -197,10 +197,55 @@ Path+=Path;$UVBinDir;$UVPythonBinDir
     Write-Log "Successfully configure UV." -Level Success
 }
 
+function Install-Git {
+    Write-Log "Configuring Git..." -Level Info
+
+    Write-Log "Fetching lastest PortableGit download link at https://git-scm.com/install/windows..." -Level Info
+    $GitScmResponse = Invoke-WebRequest -Uri "https://git-scm.com/install/windows" -UseBasicParsing
+    $PortableGitDownloadLink = ($GitScmResponse.Links | Where-Object {
+        $_.href -like "*PortableGit-*-64-bit.7z.exe"
+    } | Select-Object -First 1).href
+
+    if (-not $PortableGitDownloadLink) {
+        throw "Could not find a valid PortableGit download link."
+    }
+    Write-Log "Done." -Level Success
+
+    $PortableGitExeFile = Join-Path $TmpDir "portable-git.exe"
+    Write-Log "Downloading PortableGit to $PortableGitExeFile at $PortableGitDownloadLink..." -Level Info
+    Invoke-WebRequest -Uri $PortableGitDownloadLink -UseBasicParsing -OutFile $PortableGitExeFile
+    Write-Log "Done." -Level Success
+
+    $GitDir = Join-Path $RootDir "git"
+    Write-Log "Extracting Git to $GitDir..." -Level Info
+    & $PortableGitExeFile -o $GitDir -y
+    Write-Log "Done." -Level Success
+    Write-Log "YOU NEED TO WAIT A FEW SECONDS AFTER EXTRACTION" -Level Warning
+
+    Write-Log "Configuring environment variables..." -Level Info
+    $GitBinDir = Join-Path $GitDir "cmd"
+    do {
+        $Confirm = Read-Host "Add $GitBinDir to User Path? (Y/N)"
+        $Confirm = $Confirm.ToUpper()
+    } while ($Confirm -notin @("Y", "N"))
+
+    if ($Confirm -eq "Y") {
+        Write-Log "Adding $GitBinDir to User Path..." -Level Warning
+        Add-UserPath -Path $GitBinDir
+        Write-Log "Done." -Level Success
+    }
+    else {
+        Write-Log "Adding was canceled. You may need to manually configure User Path." -Level Warning
+    }
+
+    Write-Log "Successfully configure Git." -Level Success
+}
+
 function Install-All {
     Initialize-Installation
     Install-MinGW64
     Install-UV
+    Install-Git
 
     Write-Log "Deleting $TmpDir..." -Level Info
     Remove-Item $TmpDir -Recurse -Force
