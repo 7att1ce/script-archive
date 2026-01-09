@@ -12,3 +12,4 @@
 目前配置的环境:
 - C/C++: [https://winlibs.com/](https://winlibs.com/)
 - Python: [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
+- Git: [https://git-scm.com/install/windows](https://git-scm.com/install/windows)
