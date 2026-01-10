@@ -5,7 +5,7 @@
 
 ## 脚本功能
 
-### dev-setup.ps1
+### `dev-setup.ps1`
 
 在 Windows 10/11 上自动配置简单的开发环境  
 通过下载 standalone build 并写入环境变量实现  
@@ -13,3 +13,8 @@
 - C/C++: [https://winlibs.com/](https://winlibs.com/)
 - Python: [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
 - Git: [https://git-scm.com/install/windows](https://git-scm.com/install/windows)
+
+### `sunshine`
+
+- `autostart.ps1`: 更改 Sunshine 服务自启动状态
+- `restart.ps1`: 重启 Sunshine 服务
