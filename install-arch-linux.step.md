@@ -1,0 +1,238 @@
+# Arch Linux installation record
+
+## Device
+
+- Laptop: ASUS TUFGaming A16 2024 FA607PV
+- CPU: AMD Ryzen R9-7940HX
+- Memory: DDR5 5200MHZ 32GB
+- GPU: NVIDIA RTX 4060 Laptop
+- Disk:
+  - WD PC SN560 SDDPNQE-1T00-1102 1TB
+  - KIOXIA-EXCERIA PLUS G3 SSD 1TB
+
+## References
+
+- [https://asus-linux.org/guides/arch-guide/](https://asus-linux.org/guides/arch-guide/)
+- [https://wiki.archlinux.org/title/Installation_guide](https://wiki.archlinux.org/title/Installation_guide)
+
+## Preinstallation
+
+1. 下载 Arch Linux ISO, 准备安装媒介 (USB 安装, PXE 安装, 等等).
+2. 进入 BIOS 页面
+  - 开启 Erp
+  - 关闭 Armoury Crate 控制接口支持
+  - 显示模式设置为动态
+  - 关闭 AMD 超频
+  - 关闭快速启动
+  - 关闭安全启动
+3. 电脑启动到 Arch Linux 安装环境
+
+## Steps
+
+### 1. 连接到互联网
+
+对于有线网络, 一般插上网线就会自动通过 DHCP 连接网络, 这里暂时没有分配静态 IP 需求, 暂且跳过  
+对于无线网络, 使用 `iwctl` 进行连接
+
+> 使用 `iwctl` 连接无线网络步骤:  
+> 参考: [https://wiki.archlinux.org/title/Iwd#iwctl](https://wiki.archlinux.org/title/Iwd#iwctl)  
+> 查看无线网卡设备并确保已开启
+> ```shell
+> iwctl device list
+> ```
+> 扫描并查看可用网络 (wlan0 应当被更改为具体的设备名, 之后同理)
+> ```shell
+> iwctl station wlan0 scan
+> iwctl station wlan0 get-networks
+> ```
+> 连接网络 (SSID 为具体的无线网络名称, 如果提示输入密码直接输入即可)
+> ```shell
+> iwctl station wlan0 connect SSID
+> ```
+
+检查互联网连接
+```shell
+ping ping.archlinux.org
+```
+
+### 2. 更新系统时钟
+
+确保系统时钟同步
+```shell
+timedatectl
+```
+
+### 3. 磁盘分区
+
+查看要安装系统的磁盘设备 (由于设备较多, 使用 `less` 命令方便滚动屏幕)
+```shell
+fdisk -l | less
+```
+这里要将系统安装在 SN560 上, 对应的设备应该是 `/dev/nvme0n1`  
+硬盘分区
+```shell
+cfdisk /dev/nvme0n1
+```
+分区类型选 GPT  
+分区方案:
+|Mount Point|Partition     |Partition type GUID                                        |Size     |
+|:---------:|:------------:|:---------------------------------------------------------:|:-------:|
+|/boot      |/dev/nvme0n1p1|`C12A7328-F81F-11D2-BA4B-00A0C93EC93B`: EFI System         |1GB      |
+|\[SWAP\]   |/dev/nvme0n1p2|`0657FD6D-A4AB-43C4-84E5-0933C84B4F4F`: Linux swap         |32GB     |
+|/          |/dev/nvme0n1p3|`4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709`: Linux root (x86-64)|Remainder|
+
+查看分区更改
+```shell
+fdisk -l /dev/nvme0n1
+```
+
+### 4. 格式化分区
+
+```shell
+mkfs.fat -F 32 /dev/nvme0n1p1
+mkswap /dev/nvme0n1p2
+mkfs.ext4 /dev/nvme0n1p3
+```
+检查格式化
+```shell
+lsblk -f /dev/nvme0n1
+```
+
+### 5. 挂载文件系统
+
+```shell
+mount /dev/nvme0n1p3 /mnt
+mount --mkdir /dev/nvme0n1p1 /mnt/boot
+swapon /dev/nvme0n1p2
+```
+
+### 6. 修改镜像源
+
+```shell
+cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+
+nano /etc/pacman.d/mirrorlist # 编辑 /etc/pacman.d/mirrorlist, 将 CN 镜像源移动到顶部
+
+# 一种替换方案
+curl -L 'https://archlinux.org/mirrorlist/?country=CN&protocol=https' -o /etc/pacman.d/mirrorlist
+nano /etc/pacman.d/mirrorlist # 去掉注释
+```
+
+### 7. 安装基础包
+
+```shell
+pacstrap -K /mnt base linux linux-firmware amd-ucode iwd modemmanager usb_modeswitch nano vi vim man-db man-pages texinfo sudo bluez bluez-utils wget git
+```
+
+### 8. 配置系统
+
+```shell
+genfstab -U /mnt >> /mnt/etc/fstab
+
+arch-chroot /mnt
+
+ln -sf /usr/share/zoneinfo/Asia/Singapore /etc/localtime
+hwclock --systohc
+
+nano /etc/locale.gen # 取消掉 en_SG.UTF8 UTF-8 和 zh_SG.UTF-8 UTF-8 的注释
+locale-gen
+echo -e "LANG=en_SG.UTF-8" >> /etc/locale.conf
+
+echo -e "asus" >> /etc/hostname
+
+passwd
+
+# 配置 systemd-boot (asus-linux.org 不推荐使用 GRUB)
+bootctl install
+bootctl --no-variables --graceful update
+# system-boot 配置文件参考
+# https://blog.yoitsu.moe/arch-linux/using_systemd_boot.html
+# https://blog.wtm.moe/articles/grub2systemd-boot/
+# arch.conf
+# title   Arch Linux
+# linux   /vmlinuz-linux
+# initrd  /amd-ucode.img
+# initrd  /initramfs-linux.img
+# options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw
+echo -e "title   Arch Linux\nlinux   /vmlinuz-linux\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch.conf
+# loader.conf
+# default arch.conf
+# timeout 1
+echo -e "default arch.conf\ntimeout 1" >> /boot/loader/loader.conf
+bootctl update
+
+systemctl enable systemd-networkd.service
+systemctl enable systemd-resolved.service
+systemctl enable iwd.service
+systemctl enable ModemManager.service
+systemctl enable bluetooth.service
+
+useradd -m user
+passwd user
+
+visudo /etc/sudoers # 添加 user ALL=(ALL:ALL) ALL
+
+exit
+
+# 直接复制 archiso 的配置
+cp /etc/systemd/network/* /mnt/etc/systemd/network/
+cp /etc/pacman.d/mirrorlist.bak /mnt/etc/pacman.d/
+
+umount -R /mnt
+```
+
+### 9. 安装后基本配置
+
+执行 `poweroff` 关机, 移除安装介质
+
+## To-do list
+
+添加 g14 仓库
+```shell
+# wget "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x8b15a6b0e9a3fa35" -O g14.sec
+# sudo pacman-key -a g14.sec
+
+pacman-key --recv-keys 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35 --keyserver hkp://keyserver.ubuntu.com
+pacman-key --finger 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35 --keyserver hkp://keyserver.ubuntu.com
+pacman-key --lsign-key 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35 --keyserver hkp://keyserver.ubuntu.com
+pacman-key --finger 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35 --keyserver hkp://keyserver.ubuntu.com
+
+echo -e "\n[g14]\nServer = https://arch.asus-linux.org" >> /etc/pacman.conf
+
+pacman -Syu
+```
+安装额外组件
+```shell
+pacman -S asusctl power-profiles-daemon
+systemctl enable --now power-profiles-daemon.service
+
+pacman -S rog-control-center
+
+pacman -Sy linux-g14 linux-g14-headers
+
+reboot
+
+# 添加 systemd-boot 配置
+# arch-g14.conf
+# title   Arch Linux G14
+# linux   /vmlinuz-linux-g14
+# initrd  /amd-ucode.img
+# initrd  /initramfs-linux-g14.img
+# options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw
+echo -e "title   Arch Linux G14\nlinux   /vmlinuz-linux-g14\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux-g14.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch-g14.conf
+
+asusctl profile -a Quiet
+```
+安装显卡驱动
+```shell
+pacman -S nvidia-open-dkms nvidia-utils lib32-nvidia-utils vulkan-icd-loader lib32-vulkan-icd-loader
+pacman -S mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon
+
+reboot
+
+git clone https://gitlab.com/asus-linux/nvidia-laptop-power-cfg.git
+cd nvidia-laptop-power-cfg
+makepkg -sfi
+systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service
+systemctl enable --now nvidia-powerd
+```
