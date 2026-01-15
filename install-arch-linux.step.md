@@ -181,12 +181,9 @@ cp /etc/pacman.d/mirrorlist.bak /mnt/etc/pacman.d/
 umount -R /mnt
 ```
 
-### 9. 安装后基本配置
+### 9. asus-linux.org 配置
 
-执行 `poweroff` 关机, 移除安装介质
-
-## To-do list
-
+执行 `poweroff` 关机, 移除安装介质, 重启  
 以非 root 用户登录  
 添加 g14 仓库
 ```shell
@@ -243,6 +240,7 @@ reboot
 
 git clone https://gitlab.com/asus-linux/nvidia-laptop-power-cfg.git
 cd nvidia-laptop-power-cfg
+# 这里 makepkg 依赖 base-devel 包
 makepkg -sfi
 
 sudo systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service
@@ -250,3 +248,15 @@ sudo systemctl enable --now nvidia-powerd
 
 reboot
 ```
+
+## To-do list
+
+### To be tested
+
+### To be updated
+
+- 也许应当将普通用户添加到 wheel 组, 并配置 visudo 取消注释 wheel 组配置来控制 sudo 命令权限
+- 启用桌面环境
+- 配置 KVM
+- 配置容器环境 (Docker, etc.)
+- 配置 Windows 环境 (wine, steam proton, etc.)
