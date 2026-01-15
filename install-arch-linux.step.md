@@ -111,17 +111,26 @@ swapon /dev/nvme0n1p2
 ```shell
 cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
 
-nano /etc/pacman.d/mirrorlist # 编辑 /etc/pacman.d/mirrorlist, 将 CN 镜像源移动到顶部
-
+# nano /etc/pacman.d/mirrorlist # 编辑 /etc/pacman.d/mirrorlist, 将 CN 镜像源移动到顶部
 # 一种替换方案
 curl -L 'https://archlinux.org/mirrorlist/?country=CN&protocol=https' -o /etc/pacman.d/mirrorlist
 nano /etc/pacman.d/mirrorlist # 去掉注释
 ```
 
 ### 7. 安装基础包
+ 
+安装内容简介:
+- base, base-devel, linux, linux-firmware: 基础包, 包含基础内核, 固件, 应用程序. base-devel 是后面安装nvidia-laptop-power-cfg 中 makepkg 的依赖
+- amd-ucode: AMD CPU 微码
+- networkmanager, modemmanager, usb_modeswitch: 网络管理, 后两者为 PPPoE 上网需要 (其实可以不安装)
+- nano, vi, vim: 文本编辑器, 其中 vi 是 visudo 的默认编辑器, 如果不安装的话须额外配置全局默认编辑器
+- man-db, man-pages, texinfo: 命令帮助手册
+- sudo: 以非 root 用户身份执行特权命令
+- bluez, bluez-utils: 蓝牙相关
+- wget, git: 顾名思义
 
 ```shell
-pacstrap -K /mnt base base-devel linux linux-firmware amd-ucode iwd modemmanager usb_modeswitch nano vi vim man-db man-pages texinfo sudo bluez bluez-utils wget git
+pacstrap -K /mnt base base-devel linux linux-firmware amd-ucode networkmanager modemmanager usb_modeswitch nano vi vim man-db man-pages texinfo sudo bluez bluez-utils wget git
 ```
 
 ### 8. 配置系统
@@ -131,12 +140,14 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
 arch-chroot /mnt
 
-ln -sf /usr/share/zoneinfo/Asia/Singapore /etc/localtime
+ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 hwclock --systohc
 
-nano /etc/locale.gen # 取消掉 en_SG.UTF8 UTF-8 和 zh_SG.UTF-8 UTF-8 的注释
+# 取消掉 en_US.UTF8 UTF-8 和 zh_CN.UTF-8 UTF-8 的注释
+# 这里原本想取消注释 en_SG.UTF8 UTF-8 和 zh_SG.UTF-8 UTF-8, 发现 KDE 桌面语言混乱
+nano /etc/locale.gen
 locale-gen
-echo "LANG=en_SG.UTF-8" >> /etc/locale.conf
+echo "LANG=en_US.UTF-8" >> /etc/locale.conf
 
 echo "asus" >> /etc/hostname
 
@@ -154,36 +165,51 @@ bootctl --no-variables --graceful update
 # initrd  /amd-ucode.img
 # initrd  /initramfs-linux.img
 # options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw
-echo -e "title   Arch Linux\nlinux   /vmlinuz-linux\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch.conf
+# echo -e "title   Arch Linux\nlinux   /vmlinuz-linux\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch.conf
+echo "title   Arch Linux" >> /boot/loader/entries/arch.conf
+echo "linux   /vmlinuz-linux" >> /boot/loader/entries/arch.conf
+echo "initrd  /amd-ucode.img" >> /boot/loader/entries/arch.conf
+echo "initrd  /initramfs-linux.img" >> /boot/loader/entries/arch.conf
+echo "options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch.conf
 # loader.conf
 # default arch.conf
 # timeout 1
-echo -e "default arch.conf\ntimeout 1" >> /boot/loader/loader.conf
+# echo -e "default arch.conf\ntimeout 1" >> /boot/loader/loader.conf
+echo "default arch.conf" >> /boot/loader/loader.conf
+echo "timeout 1" >> /boot/loader/loader.conf
 bootctl update
 
-systemctl enable systemd-networkd.service
+# 与 networkmanager 冲突
+# systemctl enable systemd-networkd.service
 systemctl enable systemd-resolved.service
-systemctl enable iwd.service
+# 与 networkmanager 冲突
+# systemctl enable iwd.service
 systemctl enable ModemManager.service
 systemctl enable bluetooth.service
+# 启用 networkmanager, 注意与 systemd-networkd 和 iwd 冲突
+systemctl enable NetworkManager.service
 
-useradd -m user
+useradd -m -G wheel user
 passwd user
 
-visudo # 添加 user ALL=(ALL:ALL) ALL
+# 取消注释 wheel 配置
+visudo
 
 exit
 
 # 直接复制 archiso 的配置
-cp /etc/systemd/network/* /mnt/etc/systemd/network/
+# 不用 systemd-networkd 的话不用复制该配置
+# cp /etc/systemd/network/* /mnt/etc/systemd/network/
 cp /etc/pacman.d/mirrorlist.bak /mnt/etc/pacman.d/
 
 umount -R /mnt
+
+poweroff
 ```
 
 ### 9. asus-linux.org 配置
 
-执行 `poweroff` 关机, 移除安装介质, 重启  
+移除安装介质, 开机  
 以非 root 用户登录  
 添加 g14 仓库
 ```shell
@@ -201,7 +227,13 @@ rm g14.sec
 # # Server = https://arch.asus-linux.org
 # # Republic of Korea
 # Server = https://naru.jhyub.dev/$repo
-sudo echo -e "\n[g14]\n#Server = https://arch.asus-linux.org\nServer = Server = https://naru.jhyub.dev/\$repo" >> /etc/pacman.conf
+# sudo echo -e "\n[g14]\n#Server = https://arch.asus-linux.org\nServer = https://naru.jhyub.dev/\$repo" >> /etc/pacman.conf
+sudo echo "" >> /etc/pacman.conf
+sudo echo "[g14]" >> /etc/pacman.conf
+sudo echo "# Germany, origin" >> /etc/pacman.conf
+sudo echo "# Server = https://arch.asus-linux.org" >> /etc/pacman.conf
+sudo echo "# Republic of Korea" >> /etc/pacman.conf
+sudo echo "Server = https://naru.jhyub.dev/\$repo" >> /etc/pacman.conf
 
 sudo pacman -Syu
 ```
@@ -224,7 +256,12 @@ reboot
 # initrd  /amd-ucode.img
 # initrd  /initramfs-linux-g14.img
 # options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw
-sudo echo -e "title   Arch Linux G14\nlinux   /vmlinuz-linux-g14\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux-g14.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch-g14.conf
+# sudo echo -e "title   Arch Linux G14\nlinux   /vmlinuz-linux-g14\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux-g14.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch-g14.conf
+sudo echo "title   Arch Linux G14" >> /boot/loader/entries/arch-g14.conf
+sudo echo "linux   /vmlinuz-linux-g14" >> /boot/loader/entries/arch-g14.conf
+sudo echo "initrd  /amd-ucode.img" >> /boot/loader/entries/arch-g14.conf
+sudo echo "initrd  /initramfs-linux-g14.img" >> /boot/loader/entries/arch-g14.conf
+sudo echo "options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch-g14.conf
 # 修改默认启动项为 arch-g14.conf
 sudo nano /boot/loader/loader.conf
 ```
@@ -233,8 +270,8 @@ sudo nano /boot/loader/loader.conf
 # 取消注释 [multilib] 启用 32 位源
 sudo nano /etc/pacman.conf
 
-pacman -S --needed nvidia-open-dkms nvidia-utils lib32-nvidia-utils vulkan-icd-loader lib32-vulkan-icd-loader
-pacman -S --needed mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon
+sudo pacman -S --needed nvidia-open-dkms nvidia-utils lib32-nvidia-utils vulkan-icd-loader lib32-vulkan-icd-loader
+sudo pacman -S --needed mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon
 
 reboot
 
@@ -248,6 +285,37 @@ sudo systemctl enable --now nvidia-powerd
 
 reboot
 ```
+安装基础字体, 桌面环境需要
+```shell
+sudo pacman -S --needed noto-fonts noto-fonts-cjk noto-fonts-emoji
+```
+安装视频解码
+```shell
+sudo pacman -S --needed libva-nvidia-driver libvdpau-va-gl libva-utils vdpauinfo vulkan-tools
+reboot
+```
+安装音频依赖
+```shell
+sudo pacman -S --needed sof-firmware alsa-ucm-conf alsa-utils pipewire lib32-pipewire wireplumber pipewire-audio pipewire-alsa pipewire-pulse pipewire-jack lib32-pipewire-jack
+systemctl --user enable --now pipewire pipewire-pulse wireplumber
+reboot
+```
+安装KDE和一些相关组件
+```shell
+# NetworkManager 与 KDE 深度集成
+# 如果启用 NetworkManager 则应当关闭 systemd-networkd.service, iwd.service (二者存在冲突), 而ModemManager.service 受其支持可选择性开启, systemd-resolved.service 最好保持开启 (若必须关闭则需要配置 /etc/NetworkManager/conf.d/no-systemd-resolved.conf 添加 "[main]\nsystemd-resolved=false", 防止日志一直产生报错) 
+# sudo pacman -S --needed networkmanager
+# sudo systemctl disable --now systemd-networkd.service
+# sudo systemctl disable --now iwd.service
+# sudo systemctl enable --now NetworkManager.service
+sudo pacman -S --needed plasma-meta konsole dolphin qt6-multimedia-ffmpeg
+# 临时启动 KDE 测试是否可用
+/usr/lib/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland
+# 临时启动 SDDM 测试是否可用
+sudo systemctl start sddm.service
+# 启动开机就进入桌面
+sudo systemctl enable sddm.service
+```
 
 ## To-do list
 
@@ -256,8 +324,7 @@ reboot
 ### To be updated
 
 - 添加硬盘分区前清空硬盘格式化操作
-- 也许应当将普通用户添加到 wheel 组, 并配置 visudo 取消注释 wheel 组配置来控制 sudo 命令权限
-- 启用桌面环境
+- `sudo echo -e xxx >> xxx` 实际不能正常工作, 需要修改
 - 配置 KVM
 - 配置容器环境 (Docker, etc.)
 - 配置 Windows 环境 (wine, steam proton, etc.)
