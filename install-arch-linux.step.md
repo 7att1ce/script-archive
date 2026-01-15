@@ -255,6 +255,7 @@ reboot
 
 ### To be updated
 
+- 添加硬盘分区前清空硬盘格式化操作
 - 也许应当将普通用户添加到 wheel 组, 并配置 visudo 取消注释 wheel 组配置来控制 sudo 命令权限
 - 启用桌面环境
 - 配置 KVM
