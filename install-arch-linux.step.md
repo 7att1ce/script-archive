@@ -316,6 +316,14 @@ sudo systemctl start sddm.service
 # 启动开机就进入桌面
 sudo systemctl enable sddm.service
 ```
+解决开机后只显示全黑页面和一个光标, 不显示 SDDM 的问题的一种方法
+```bash
+sudo systemctl edit sddm.service
+# 添加以下内容
+# [Service]
+# ExecStartPre=/bin/sleep 2
+sudo systemctl daemon-reload
+```
 
 ## To-do list
 
