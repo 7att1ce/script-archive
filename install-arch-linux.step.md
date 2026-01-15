@@ -121,7 +121,7 @@ nano /etc/pacman.d/mirrorlist # 去掉注释
 ### 7. 安装基础包
 
 ```shell
-pacstrap -K /mnt base linux linux-firmware amd-ucode iwd modemmanager usb_modeswitch nano vi vim man-db man-pages texinfo sudo bluez bluez-utils wget git
+pacstrap -K /mnt base base-devel linux linux-firmware amd-ucode iwd modemmanager usb_modeswitch nano vi vim man-db man-pages texinfo sudo bluez bluez-utils wget git
 ```
 
 ### 8. 配置系统
@@ -198,7 +198,13 @@ sudo pacman-key --lsign-key 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35
 sudo pacman-key --finger 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35
 rm g14.sec
 
-sudo echo -e "\n[g14]\nServer = https://arch.asus-linux.org" >> /etc/pacman.conf
+# /etc/pacman.conf 最底部添加
+# [g14]
+# # Germany, origin
+# # Server = https://arch.asus-linux.org
+# # Republic of Korea
+# Server = https://naru.jhyub.dev/$repo
+sudo echo -e "\n[g14]\n#Server = https://arch.asus-linux.org\nServer = Server = https://naru.jhyub.dev/\$repo" >> /etc/pacman.conf
 
 sudo pacman -Syu
 ```
@@ -206,10 +212,11 @@ sudo pacman -Syu
 ```shell
 sudo pacman -S asusctl power-profiles-daemon
 sudo systemctl enable --now power-profiles-daemon.service
+sudo asusctl profile -a Quiet
 
 sudo pacman -S rog-control-center
 
-sudo pacman -Sy linux-g14 linux-g14-headers
+sudo pacman -S linux-g14 linux-g14-headers
 
 reboot
 
@@ -220,20 +227,26 @@ reboot
 # initrd  /amd-ucode.img
 # initrd  /initramfs-linux-g14.img
 # options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw
-echo -e "title   Arch Linux G14\nlinux   /vmlinuz-linux-g14\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux-g14.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch-g14.conf
-
-asusctl profile -a Quiet
+sudo echo -e "title   Arch Linux G14\nlinux   /vmlinuz-linux-g14\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux-g14.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch-g14.conf
+# 修改默认启动项为 arch-g14.conf
+sudo nano /boot/loader/loader.conf
 ```
 安装显卡驱动
 ```shell
-pacman -S nvidia-open-dkms nvidia-utils lib32-nvidia-utils vulkan-icd-loader lib32-vulkan-icd-loader
-pacman -S mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon
+# 取消注释 [multilib] 启用 32 位源
+sudo nano /etc/pacman.conf
+
+pacman -S --needed nvidia-open-dkms nvidia-utils lib32-nvidia-utils vulkan-icd-loader lib32-vulkan-icd-loader
+pacman -S --needed mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon
 
 reboot
 
 git clone https://gitlab.com/asus-linux/nvidia-laptop-power-cfg.git
 cd nvidia-laptop-power-cfg
 makepkg -sfi
-systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service
-systemctl enable --now nvidia-powerd
+
+sudo systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service
+sudo systemctl enable --now nvidia-powerd
+
+reboot
 ```
