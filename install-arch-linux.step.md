@@ -197,7 +197,7 @@ sudo pacman-key --finger 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35
 sudo pacman-key --lsign-key 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35
 sudo pacman-key --finger 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35
 
-sudo echo -e "\n[g14]\nServer = https://arch.asus-linux.org\n#Server = https://naru.jhyub.dev/\$repo" >> /etc/pacman.conf
+sudo echo -e "\n[g14]\nServer = https://arch.asus-linux.org" >> /etc/pacman.conf
 
 sudo pacman -Syu
 ```
