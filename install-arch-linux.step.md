@@ -136,9 +136,9 @@ hwclock --systohc
 
 nano /etc/locale.gen # 取消掉 en_SG.UTF8 UTF-8 和 zh_SG.UTF-8 UTF-8 的注释
 locale-gen
-echo -e "LANG=en_SG.UTF-8" >> /etc/locale.conf
+echo "LANG=en_SG.UTF-8" >> /etc/locale.conf
 
-echo -e "asus" >> /etc/hostname
+echo "asus" >> /etc/hostname
 
 passwd
 
@@ -170,7 +170,7 @@ systemctl enable bluetooth.service
 useradd -m user
 passwd user
 
-visudo /etc/sudoers # 添加 user ALL=(ALL:ALL) ALL
+visudo # 添加 user ALL=(ALL:ALL) ALL
 
 exit
 
@@ -187,28 +187,28 @@ umount -R /mnt
 
 ## To-do list
 
+以非 root 用户登录  
 添加 g14 仓库
 ```shell
-# wget "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x8b15a6b0e9a3fa35" -O g14.sec
-# sudo pacman-key -a g14.sec
+# 根据 asus-linux 官方指定 keyserver 也无法找到对应的签名, 只能单独下载签名本地导入
+wget "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x8b15a6b0e9a3fa35" -O g14.sec
+sudo pacman-key -a g14.sec
+sudo pacman-key --finger 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35
+sudo pacman-key --lsign-key 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35
+sudo pacman-key --finger 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35
 
-pacman-key --recv-keys 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35 --keyserver hkp://keyserver.ubuntu.com
-pacman-key --finger 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35 --keyserver hkp://keyserver.ubuntu.com
-pacman-key --lsign-key 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35 --keyserver hkp://keyserver.ubuntu.com
-pacman-key --finger 8F654886F17D497FEFE3DB448B15A6B0E9A3FA35 --keyserver hkp://keyserver.ubuntu.com
+sudo echo -e "\n[g14]\nServer = https://arch.asus-linux.org\n#Server = https://naru.jhyub.dev/\$repo" >> /etc/pacman.conf
 
-echo -e "\n[g14]\nServer = https://arch.asus-linux.org" >> /etc/pacman.conf
-
-pacman -Syu
+sudo pacman -Syu
 ```
 安装额外组件
 ```shell
-pacman -S asusctl power-profiles-daemon
-systemctl enable --now power-profiles-daemon.service
+sudo pacman -S asusctl power-profiles-daemon
+sudo systemctl enable --now power-profiles-daemon.service
 
-pacman -S rog-control-center
+sudo pacman -S rog-control-center
 
-pacman -Sy linux-g14 linux-g14-headers
+sudo pacman -Sy linux-g14 linux-g14-headers
 
 reboot
 
