@@ -127,10 +127,10 @@ nano /etc/pacman.d/mirrorlist # 去掉注释
 - man-db, man-pages, texinfo: 命令帮助手册
 - sudo: 以非 root 用户身份执行特权命令
 - bluez, bluez-utils: 蓝牙相关
-- wget, git: 顾名思义
+- wget, git, openssh: 顾名思义
 
 ```shell
-pacstrap -K /mnt base base-devel linux linux-firmware amd-ucode networkmanager modemmanager usb_modeswitch nano vi vim man-db man-pages texinfo sudo bluez bluez-utils wget git
+pacstrap -K /mnt base base-devel linux linux-firmware amd-ucode networkmanager modemmanager usb_modeswitch nano vi vim man-db man-pages texinfo sudo bluez bluez-utils wget git openssh
 ```
 
 ### 8. 配置系统
@@ -188,6 +188,8 @@ systemctl enable ModemManager.service
 systemctl enable bluetooth.service
 # 启用 networkmanager, 注意与 systemd-networkd 和 iwd 冲突
 systemctl enable NetworkManager.service
+
+systemctl enable sshd.service
 
 useradd -m -G wheel user
 passwd user
@@ -331,6 +333,7 @@ sudo systemctl daemon-reload
 
 ### To be updated
 
+- 独显直连模式 KDE 桌面卡死, 疑似驱动没正确加载
 - 添加硬盘分区前清空硬盘格式化操作
 - `sudo echo -e xxx >> xxx` 实际不能正常工作, 需要修改
 - 配置 KVM
