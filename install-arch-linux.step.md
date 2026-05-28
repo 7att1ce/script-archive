@@ -173,10 +173,10 @@ echo "initrd  /initramfs-linux.img" >> /boot/loader/entries/arch.conf
 echo "options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/sda3) rw" >> /boot/loader/entries/arch.conf
 # loader.conf
 # default arch.conf
-# timeout 5
-# echo -e "default arch.conf\ntimeout 1" >> /boot/loader/loader.conf
+# timeout 3
+# echo -e "default arch.conf\ntimeout 3" >> /boot/loader/loader.conf
 echo "default arch.conf" >> /boot/loader/loader.conf
-echo "timeout 5" >> /boot/loader/loader.conf
+echo "timeout 3" >> /boot/loader/loader.conf
 bootctl update
 
 # 与 networkmanager 冲突
