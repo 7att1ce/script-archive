@@ -68,42 +68,42 @@ timedatectl
 ```shell
 fdisk -l | less
 ```
-这里要将系统安装在 SN560 上, 对应的设备应该是 `/dev/nvme0n1`  
+这里要将系统安装在移动硬盘 (Extreme 55AE) 上, 对应的设备应该是 `/dev/sda`  
 硬盘分区
 ```shell
-cfdisk /dev/nvme0n1
+cfdisk /dev/sda
 ```
 分区类型选 GPT  
 分区方案:
 |Mount Point|Partition     |Partition type GUID                                        |Size     |
 |:---------:|:------------:|:---------------------------------------------------------:|:-------:|
-|/boot      |/dev/nvme0n1p1|`C12A7328-F81F-11D2-BA4B-00A0C93EC93B`: EFI System         |1GB      |
-|\[SWAP\]   |/dev/nvme0n1p2|`0657FD6D-A4AB-43C4-84E5-0933C84B4F4F`: Linux swap         |32GB     |
-|/          |/dev/nvme0n1p3|`4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709`: Linux root (x86-64)|Remainder|
+|/boot      |/dev/sda1|`C12A7328-F81F-11D2-BA4B-00A0C93EC93B`: EFI System         |1GB      |
+|\[SWAP\]   |/dev/sda2|`0657FD6D-A4AB-43C4-84E5-0933C84B4F4F`: Linux swap         |32GB     |
+|/          |/dev/sda3|`4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709`: Linux root (x86-64)|Remainder|
 
 查看分区更改
 ```shell
-fdisk -l /dev/nvme0n1
+fdisk -l /dev/sda
 ```
 
 ### 4. 格式化分区
 
 ```shell
-mkfs.fat -F 32 /dev/nvme0n1p1
-mkswap /dev/nvme0n1p2
-mkfs.ext4 /dev/nvme0n1p3
+mkfs.fat -F 32 /dev/sda1
+mkswap /dev/sda2
+mkfs.ext4 /dev/sda3
 ```
 检查格式化
 ```shell
-lsblk -f /dev/nvme0n1
+lsblk -f /dev/sda
 ```
 
 ### 5. 挂载文件系统
 
 ```shell
-mount /dev/nvme0n1p3 /mnt
-mount --mkdir /dev/nvme0n1p1 /mnt/boot
-swapon /dev/nvme0n1p2
+mount /dev/sda3 /mnt
+mount --mkdir /dev/sda1 /mnt/boot
+swapon /dev/sda2
 ```
 
 ### 6. 修改镜像源
@@ -164,13 +164,13 @@ bootctl --no-variables --graceful update
 # linux   /vmlinuz-linux
 # initrd  /amd-ucode.img
 # initrd  /initramfs-linux.img
-# options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw
-# echo -e "title   Arch Linux\nlinux   /vmlinuz-linux\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch.conf
+# options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/sda3) rw
+# echo -e "title   Arch Linux\nlinux   /vmlinuz-linux\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/sda3) rw" >> /boot/loader/entries/arch.conf
 echo "title   Arch Linux" >> /boot/loader/entries/arch.conf
 echo "linux   /vmlinuz-linux" >> /boot/loader/entries/arch.conf
 echo "initrd  /amd-ucode.img" >> /boot/loader/entries/arch.conf
 echo "initrd  /initramfs-linux.img" >> /boot/loader/entries/arch.conf
-echo "options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch.conf
+echo "options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/sda3) rw" >> /boot/loader/entries/arch.conf
 # loader.conf
 # default arch.conf
 # timeout 1
@@ -251,19 +251,21 @@ sudo pacman -S linux-g14 linux-g14-headers
 
 reboot
 
+> TODO: 由于针对此设备的改动已经合并到主线内核, 无需安装自定义内核, 同时 nvidia 显卡驱动应该安装 nvidia-open 而不是 nvidia-open-dkms, 待更改
+
 # 添加 systemd-boot 配置
 # arch-g14.conf
 # title   Arch Linux G14
 # linux   /vmlinuz-linux-g14
 # initrd  /amd-ucode.img
 # initrd  /initramfs-linux-g14.img
-# options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw
-# sudo echo -e "title   Arch Linux G14\nlinux   /vmlinuz-linux-g14\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux-g14.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch-g14.conf
+# options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/sda3) rw
+# sudo echo -e "title   Arch Linux G14\nlinux   /vmlinuz-linux-g14\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux-g14.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/sda3) rw" >> /boot/loader/entries/arch-g14.conf
 sudo echo "title   Arch Linux G14" >> /boot/loader/entries/arch-g14.conf
 sudo echo "linux   /vmlinuz-linux-g14" >> /boot/loader/entries/arch-g14.conf
 sudo echo "initrd  /amd-ucode.img" >> /boot/loader/entries/arch-g14.conf
 sudo echo "initrd  /initramfs-linux-g14.img" >> /boot/loader/entries/arch-g14.conf
-sudo echo "options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/nvme0n1p3) rw" >> /boot/loader/entries/arch-g14.conf
+sudo echo "options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/sda3) rw" >> /boot/loader/entries/arch-g14.conf
 # 修改默认启动项为 arch-g14.conf
 sudo nano /boot/loader/loader.conf
 ```
