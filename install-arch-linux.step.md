@@ -247,7 +247,8 @@ sudo asusctl profile -a Quiet
 
 sudo pacman -S rog-control-center
 
-sudo pacman -S linux-g14 linux-g14-headers
+> no need custom kernel
+# sudo pacman -S linux-g14 linux-g14-headers
 
 reboot
 
