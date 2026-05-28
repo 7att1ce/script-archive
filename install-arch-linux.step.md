@@ -279,7 +279,7 @@ reboot
 # 取消注释 [multilib] 启用 32 位源
 sudo nano /etc/pacman.conf
 
-sudo pacman -S --needed nvidia-open-dkms nvidia-utils lib32-nvidia-utils vulkan-icd-loader lib32-vulkan-icd-loader
+sudo pacman -S --needed nvidia-open nvidia-utils lib32-nvidia-utils vulkan-icd-loader lib32-vulkan-icd-loader
 sudo pacman -S --needed mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon
 
 reboot
