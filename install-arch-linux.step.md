@@ -341,3 +341,7 @@ sudo systemctl enable plasmalogin
 新的问题: 修改后如果桌面环境未设置为自启动, 则开机后无法显示 tty login 页面
 
 可能的解决办法: 安装系统时开启独显直连模式而不是混合模式 (一般来说应该开启混合模式避免安装时潜在的bug)
+
+### plasmalogin 的显示器设置与 kde 不同步
+
+需要点击系统设置-登录屏幕-应用 Plasma 设置进行手动同步
