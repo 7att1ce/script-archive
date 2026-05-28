@@ -339,3 +339,5 @@ sudo systemctl enable plasmalogin
 临时解决办法: 运行 `grep . /sys/class/drm/*/status` 找出幽灵显示器对应的接口, 这里是 `/sys/class/drm/card0-Unknown-1/status:connected`, 将禁用该接口的参数添加到启动项中, 对于 systemd-boot 是在对应的 conf 文件中的 option是字段后添加 `video=Unknown-1:d`, 注意参数之间要有空格
 
 新的问题: 修改后如果桌面环境未设置为自启动, 则开机后无法显示 tty login 页面
+
+可能的解决办法: 安装系统时开启独显直连模式而不是混合模式 (一般来说应该开启混合模式避免安装时潜在的bug)
