@@ -322,9 +322,9 @@ sudo pacman -S --needed plasma-meta konsole dolphin qt6-multimedia-ffmpeg
 # 临时启动 KDE 测试是否可用
 /usr/lib/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland
 # 临时启动 SDDM 测试是否可用
-sudo systemctl start sddm.service
+sudo systemctl start plasmalogin
 # 启动开机就进入桌面
-sudo systemctl enable sddm.service
+sudo systemctl enable plasmalogin
 ```
 解决开机后只显示全黑页面和一个光标, 不显示 SDDM 的问题的一种方法
 ```bash
