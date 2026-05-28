@@ -155,7 +155,7 @@ passwd
 
 # 配置 systemd-boot (asus-linux.org 不推荐使用 GRUB)
 bootctl install
-bootctl --no-variables --graceful update
+bootctl --variables=no --graceful update
 # system-boot 配置文件参考
 # https://blog.yoitsu.moe/arch-linux/using_systemd_boot.html
 # https://blog.wtm.moe/articles/grub2systemd-boot/
