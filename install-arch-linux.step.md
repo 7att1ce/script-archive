@@ -247,12 +247,12 @@ sudo asusctl profile -a Quiet
 
 sudo pacman -S rog-control-center
 
-> no need custom kernel
+# no need custom kernel
 # sudo pacman -S linux-g14 linux-g14-headers
 
 reboot
 
-> TODO: 由于针对此设备的改动已经合并到主线内核, 无需安装自定义内核, 同时 nvidia 显卡驱动应该安装 nvidia-open 而不是 nvidia-open-dkms, 待更改
+# 由于针对此设备的改动已经合并到主线内核, 无需安装自定义内核, 同时 nvidia 显卡驱动应该安装 nvidia-open 而不是 nvidia-open-dkms, 待更改
 
 # 添加 systemd-boot 配置
 # arch-g14.conf
@@ -262,15 +262,19 @@ reboot
 # initrd  /initramfs-linux-g14.img
 # options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/sda3) rw
 # sudo echo -e "title   Arch Linux G14\nlinux   /vmlinuz-linux-g14\ninitrd  /amd-ucode.img\ninitrd  /initramfs-linux-g14.img\noptions root=PARTUUID=$(blkid -s PARTUUID -o value /dev/sda3) rw" >> /boot/loader/entries/arch-g14.conf
-sudo echo "title   Arch Linux G14" >> /boot/loader/entries/arch-g14.conf
-sudo echo "linux   /vmlinuz-linux-g14" >> /boot/loader/entries/arch-g14.conf
-sudo echo "initrd  /amd-ucode.img" >> /boot/loader/entries/arch-g14.conf
-sudo echo "initrd  /initramfs-linux-g14.img" >> /boot/loader/entries/arch-g14.conf
-sudo echo "options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/sda3) rw" >> /boot/loader/entries/arch-g14.conf
+
+# sudo echo "title   Arch Linux G14" >> /boot/loader/entries/arch-g14.conf
+# sudo echo "linux   /vmlinuz-linux-g14" >> /boot/loader/entries/arch-g14.conf
+# sudo echo "initrd  /amd-ucode.img" >> /boot/loader/entries/arch-g14.conf
+# sudo echo "initrd  /initramfs-linux-g14.img" >> /boot/loader/entries/arch-g14.conf
+# sudo echo "options root=PARTUUID=$(blkid -s PARTUUID -o value /dev/sda3) rw" >> /boot/loader/entries/arch-g14.conf
 # 修改默认启动项为 arch-g14.conf
-sudo nano /boot/loader/loader.conf
+# sudo nano /boot/loader/loader.conf
 ```
 安装显卡驱动
+
+> 由于不使用自定义内核, 应安装 nvidia-open 而不是 nvidia-open-dkms, 待更改
+
 ```shell
 # 取消注释 [multilib] 启用 32 位源
 sudo nano /etc/pacman.conf
