@@ -305,7 +305,7 @@ reboot
 ```
 安装音频依赖
 ```shell
-sudo pacman -S --needed sof-firmware alsa-ucm-conf alsa-utils pipewire lib32-pipewire wireplumber pipewire-audio pipewire-alsa pipewire-pulse pipewire-jack lib32-pipewire-jack
+sudo pacman -S --needed sof-firmware alsa-firmware alsa-ucm-conf alsa-utils pipewire lib32-pipewire wireplumber pipewire-audio pipewire-alsa pipewire-pulse pipewire-jack lib32-pipewire-jack
 systemctl --user enable --now pipewire pipewire-pulse wireplumber
 reboot
 ```
