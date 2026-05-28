@@ -244,9 +244,14 @@ sudo pacman -Syu
 # python-gobject 解决 powerprofilesctl 报错
 sudo pacman -S asusctl power-profiles-daemon python-gobject
 sudo systemctl enable --now power-profiles-daemon.service
-sudo asusctl profile -a Quiet
 
+# 安装时会提示选择字体, 建议在安装完桌面环境后再安装
 sudo pacman -S rog-control-center
+
+# 修改该文件中的 platform_profile_on_ac 为 Quite 以更改默认的性能模式
+sudo nano /etc/asusd/asusd.ron
+# 修改默认键盘背光为白色
+asusctl aura effect static -c ffffff
 
 # no need custom kernel
 # sudo pacman -S linux-g14 linux-g14-headers
@@ -319,31 +324,18 @@ reboot
 # sudo systemctl disable --now iwd.service
 # sudo systemctl enable --now NetworkManager.service
 sudo pacman -S --needed plasma-meta konsole dolphin qt6-multimedia-ffmpeg
-# 临时启动 KDE 测试是否可用
-/usr/lib/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland
-# 临时启动 SDDM 测试是否可用
+# 临时启动登录管理器测试是否可用
 sudo systemctl start plasmalogin
 # 启动开机就进入桌面
 sudo systemctl enable plasmalogin
 ```
-解决开机后只显示全黑页面和一个光标, 不显示 SDDM 的问题的一种方法
-```bash
-sudo systemctl edit sddm.service
-# 添加以下内容
-# [Service]
-# ExecStartPre=/bin/sleep 2
-sudo systemctl daemon-reload
-```
 
-## To-do list
+## Issues
 
-### To be tested
+### 笔记本切换到独显直连模式后 kde 桌面出现幽灵显示器
 
-### To be updated
+推测原因: 独显直连模式未屏蔽核显, 导致系统检测出核显连接实际不存在的显示器
 
-- 独显直连模式 KDE 桌面卡死, 疑似驱动没正确加载
-- 添加硬盘分区前清空硬盘格式化操作
-- `sudo echo -e xxx >> xxx` 实际不能正常工作, 需要修改
-- 配置 KVM
-- 配置容器环境 (Docker, etc.)
-- 配置 Windows 环境 (wine, steam proton, etc.)
+临时解决办法: 运行 `grep . /sys/class/drm/*/status` 找出幽灵显示器对应的接口, 这里是 `/sys/class/drm/card0-Unknown-1/status:connected`, 将禁用该接口的参数添加到启动项中, 对于 systemd-boot 是在对应的 conf 文件中的 option是字段后添加 `video=Unknown-1:d`, 注意参数之间要有空格
+
+新的问题: 修改后如果桌面环境未设置为自启动, 则开机后无法显示 tty login 页面
