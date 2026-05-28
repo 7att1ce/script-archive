@@ -241,7 +241,8 @@ sudo pacman -Syu
 ```
 安装额外组件
 ```shell
-sudo pacman -S asusctl power-profiles-daemon
+# python-gobject 解决 powerprofilesctl 报错
+sudo pacman -S asusctl power-profiles-daemon python-gobject
 sudo systemctl enable --now power-profiles-daemon.service
 sudo asusctl profile -a Quiet
 
