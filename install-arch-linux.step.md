@@ -353,3 +353,7 @@ sudo systemctl enable plasmalogin
 可能是在安装配置完毕后手动修改了用户密码, kde wallet 密码不遵循更改, 仍然是第一次设置的密码
 
 可通过 kwalletmanager 修改密码
+
+### 修复 appimage 运行报错 error loading libfuse.so.2
+
+安装 fuse2 `sudo pacman -S fuse2`
