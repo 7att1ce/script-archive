@@ -357,3 +357,9 @@ sudo systemctl enable plasmalogin
 ### 修复 appimage 运行报错 error loading libfuse.so.2
 
 安装 fuse2 `sudo pacman -S fuse2`
+
+### 提示 /usr/bin/xdg-mime: 行 885: qtpaths: 未找到命令
+
+qtpaths 实际位置: `/usr/lib/qt6/bin/qtpaths`, `/usr/lib/qt6/bin/qtpaths6`
+
+创建软链接: `sudo ln -sf /usr/lib/qt6/bin/qtpaths /usr/bin/qtpaths`
