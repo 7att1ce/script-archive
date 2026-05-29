@@ -332,6 +332,12 @@ sudo systemctl start plasmalogin
 sudo systemctl enable plasmalogin
 ```
 
+KDE 的一些设置
+
+以下设置在 `系统设置` 应用进行
+- 锁屏设置不自动锁屏
+- 电源管理设置关闭自动休眠, 自动睡眠
+
 ## Issues
 
 ### 笔记本切换到独显直连模式后 kde 桌面出现幽灵显示器
