@@ -324,6 +324,8 @@ reboot
 # sudo systemctl disable --now iwd.service
 # sudo systemctl enable --now NetworkManager.service
 sudo pacman -S --needed plasma-meta konsole dolphin qt6-multimedia-ffmpeg
+# 默认不安装 kwalletmanager, 如果想管理 kde wallet 可安装此软件
+sudo pacman -S --needed kwalletmanager
 # 临时启动登录管理器测试是否可用
 sudo systemctl start plasmalogin
 # 启动开机就进入桌面
@@ -345,3 +347,9 @@ sudo systemctl enable plasmalogin
 ### plasmalogin 的显示器设置与 kde 不同步
 
 需要点击系统设置-登录屏幕-应用 Plasma 设置进行手动同步
+
+### kde wallet 密码与用户密码不一致
+
+可能是在安装配置完毕后手动修改了用户密码, kde wallet 密码不遵循更改, 仍然是第一次设置的密码
+
+可通过 kwalletmanager 修改密码
